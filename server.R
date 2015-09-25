@@ -13,7 +13,7 @@ shinyServer(
             abline(alpha, beta, col="red", lwd=3)
             mse <- mean((mtcars$mpg - (alpha + beta*mtcars$am))^2)
             
-            textpos.x <- .25*diff(range(mtcars$am))
+            textpos.x <- .25*max(mtcars$am)
             textpos.y <- .9*max(mtcars$mpg)
             textpos.linewidth <- diff(range(mtcars$mpg))/20
             text(textpos.x, textpos.y+2*textpos.linewidth, 
