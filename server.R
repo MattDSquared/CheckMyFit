@@ -1,8 +1,6 @@
 library(datasets); data(mtcars)
 library(ggplot2)
 
-# this is a test edit
-
 shinyServer(
     function(input, output) {
         output$myScatter <- renderPlot({
