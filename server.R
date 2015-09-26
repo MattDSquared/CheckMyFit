@@ -16,28 +16,45 @@ shinyServer(
             
             # Conditional graph display on button press. 
             if (input$checkMe > 0) {
-                gg <- gg + geom_smooth(method="lm", level=.8)
+                gg <- gg + geom_smooth(method="lm", level=.9)
             }
             
             print(gg)
         })
         
         fitDataValues <- reactive({
-            mse <- mean((mtcars$mpg - (input$alpha + input$beta*mtcars$am))^2)
             
-            data.frame(
+            estimate.rmse <- sqrt(mean((mtcars$mpg - (input$alpha + input$beta*mtcars$am))^2))
+            
+            lineStats <- data.frame(
                 Name = c("Intercept", 
                          "Slope",
                          "Mean Squraed Error (MSE)"),
-                Value = as.character(c(input$alpha, 
-                                       input$beta,
-                                       mse)), 
-                stringsAsFactors=FALSE)
+                Estimate = c(input$alpha, 
+                             input$beta,
+                             estimate.rmse))  
+            
+            # Conditional graph display on button press. 
+            # TODO: move fit calculation outside of function so results can be
+            # used over mulitple functions w/o incurring computation time.
+            if (input$checkMe > 0) {
+                myfit <- lm(mpg ~ am, data=mtcars)
+                lineStats$BestFit <- c(myfit$coefficients["(Intercept)"], 
+                                       myfit$coefficients["am"],
+                                       sqrt(mean(myfit$residuals^2)))
+            }
+            
+            # round numbers for printing
+            # TODO: find a way to do this in the render function. Digits=x doesn't
+            # appear to work if using the reactive function.
+            #lineStats <- data.frame(round(lineStats, 3))
+            
+            return(lineStats)
         })
         
         output$fitData <- renderTable({
             fitDataValues()
-        })
+            })
         
     }
 )
