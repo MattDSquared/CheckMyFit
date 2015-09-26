@@ -16,7 +16,7 @@ shinyServer(
             
             # Conditional graph display on button press. 
             if (input$checkMe > 0) {
-                gg <- gg + geom_text(aes(x=.5, y=10, label = "hello world!"))
+                gg <- gg + geom_smooth(method="lm", level=.8)
             }
             
             print(gg)
