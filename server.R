@@ -13,6 +13,12 @@ shinyServer(
             beta <- input$beta
             gg <- gg + geom_abline(intercept = alpha, slope = beta, 
                                    colour = "red", size = 1.5)
+            
+            # Conditional graph display on button press. 
+            if (input$checkMe > 0) {
+                gg <- gg + geom_text(aes(x=.5, y=10, label = "hello world!"))
+            }
+            
             print(gg)
         })
         
