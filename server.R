@@ -68,8 +68,7 @@ shinyServer(
             })
         
         output$userFeedback <- renderText({
-            input$checkMe
-            isolate({
+            if (input$checkMe > 0) {
                 if ((input$alpha > confInterval[1,1]) & 
                     (input$alpha < confInterval[1,2]) & 
                     (input$beta > confInterval[2,1]) & 
@@ -81,7 +80,7 @@ shinyServer(
                     sprintf("Hmmm, The red line should be within the %d%% confidence interval (grey area).", 
                             conflvl*100)
                 }
-            })
+            }
         })
     }
 )
