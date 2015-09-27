@@ -4,22 +4,14 @@ library(ggplot2)
 shinyServer(
     function(input, output) {
         
-        # FIXME: Once checkMe button is pressed, the linear model is fit on every
-        # user operation. 
-        calcFitCurve <- reactive({
-            getConfInterval <- function(fit, xi, level) {
-                sumCoef <- summary(fit)$coefficients
-                sumCoef[xi,"Estimate"] + c(-1,1) * qt(.5+level/2, df = fit$df) * sumCoef[xi,"Std. Error"]
-                }
-            
-            if (input$checkMe > 0) {
-                myfit <- lm(mpg ~ am, data=mtcars)
-                conflvl <- .9
-                confInterval <- rbind(getConfInterval(myfit, 1, conflvl), 
-                                      getConfInterval(myfit, 2, conflvl))
-            }
-        })
+        # Helper functions and vars
+        conflvl <- .9
+        getConfInterval <- function(fit, xi, level) {
+            sumCoef <- summary(fit)$coefficients
+            sumCoef[xi,"Estimate"] + c(-1,1) * qt(.5+level/2, df = fit$df) * sumCoef[xi,"Std. Error"]
+        }
         
+        # plot showing fit curves and data
         output$myScatter <- renderPlot({
             gg <- ggplot(mtcars, aes(x=am, y=mpg))
             gg <- gg + geom_point(colour="steelblue") +
@@ -39,6 +31,18 @@ shinyServer(
             print(gg)
         })
         
+        # reactive function for calculating the real fit curve
+        # FIXME: Once checkMe button is pressed, the linear model is fit on every
+        # user operation. 
+        calcFitCurve <- reactive({
+            if (input$checkMe > 0) {
+                myfit <<- lm(mpg ~ am, data=mtcars)
+                confInterval <<- rbind(getConfInterval(myfit, 1, conflvl), 
+                                       getConfInterval(myfit, 2, conflvl))
+            }
+        })
+        
+        # reactive function for building the table
         fitDataValues <- reactive({
             
             estimate.rmse <- sqrt(mean((mtcars$mpg - (input$alpha + input$beta*mtcars$am))^2))
@@ -65,10 +69,13 @@ shinyServer(
             return(lineStats)
         })
         
+        # table of statistics on the fit curves
         output$fitData <- renderTable({
+            calcFitCurve()
             fitDataValues()
             })
         
+        # user feedback text
         output$userFeedback <- renderText({
             if (input$checkMe > 0) {
                 if ((input$alpha > confInterval[1,1]) & 
