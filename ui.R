@@ -15,6 +15,6 @@ shinyUI(pageWithSidebar(
     mainPanel(
         plotOutput('myScatter'), 
         tableOutput("fitData"),
-        textOutput('userFeedback')
+        strong(textOutput(invisible('userFeedback')))
     )
 ))

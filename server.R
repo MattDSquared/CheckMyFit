@@ -4,6 +4,8 @@ library(ggplot2)
 shinyServer(
     function(input, output) {
         
+        # FIXME: Once checkMe button is pressed, the linear model is fit on every
+        # user operation. 
         calcFitCurve <- reactive({
             getConfInterval <- function(fit, xi, level) {
                 sumCoef <- summary(fit)$coefficients
