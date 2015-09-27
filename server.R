@@ -3,6 +3,21 @@ library(ggplot2)
 
 shinyServer(
     function(input, output) {
+        
+        calcFitCurve <- reactive({
+            getConfInterval <- function(fit, xi, level) {
+                sumCoef <- summary(fit)$coefficients
+                sumCoef[xi,"Estimate"] + c(-1,1) * qt(.5+level/2, df = fit$df) * sumCoef[xi,"Std. Error"]
+                }
+            
+            if (input$checkMe > 0) {
+                myfit <- lm(mpg ~ am, data=mtcars)
+                conflvl <- .9
+                confInterval <- rbind(getConfInterval(myfit, 1, conflvl), 
+                                      getConfInterval(myfit, 2, conflvl))
+            }
+        })
+        
         output$myScatter <- renderPlot({
             gg <- ggplot(mtcars, aes(x=am, y=mpg))
             gg <- gg + geom_point(colour="steelblue") +
@@ -16,7 +31,7 @@ shinyServer(
             
             # Conditional graph display on button press. 
             if (input$checkMe > 0) {
-                gg <- gg + geom_smooth(method="lm", level=.9)
+                gg <- gg + geom_smooth(method="lm", level=conflvl)
             }
             
             print(gg)
@@ -27,27 +42,23 @@ shinyServer(
             estimate.rmse <- sqrt(mean((mtcars$mpg - (input$alpha + input$beta*mtcars$am))^2))
             
             lineStats <- data.frame(
-                Name = c("Intercept", 
+                Value = c("Intercept", 
                          "Slope",
                          "Mean Squraed Error (MSE)"),
-                Estimate = c(input$alpha, 
-                             input$beta,
-                             estimate.rmse))  
+                Estimate = as.character(c(input$alpha, 
+                                        input$beta,
+                                        round(estimate.rmse,3))), 
+                stringsAsFactors=FALSE)  
             
             # Conditional graph display on button press. 
-            # TODO: move fit calculation outside of function so results can be
-            # used over mulitple functions w/o incurring computation time.
             if (input$checkMe > 0) {
-                myfit <- lm(mpg ~ am, data=mtcars)
-                lineStats$BestFit <- c(myfit$coefficients["(Intercept)"], 
-                                       myfit$coefficients["am"],
-                                       sqrt(mean(myfit$residuals^2)))
+                lineStats$BestFit <- as.character(round(c(myfit$coefficients["(Intercept)"], 
+                                                          myfit$coefficients["am"],
+                                                          sqrt(mean(myfit$residuals^2))),
+                                                        3))
+                lineStats$BestFit_Lower <- as.character(round(c(confInterval[,1],NA),3))
+                lineStats$BestFit_Upper <- as.character(round(c(confInterval[,2],NA),3))
             }
-            
-            # round numbers for printing
-            # TODO: find a way to do this in the render function. Digits=x doesn't
-            # appear to work if using the reactive function.
-            #lineStats <- data.frame(round(lineStats, 3))
             
             return(lineStats)
         })
@@ -56,5 +67,21 @@ shinyServer(
             fitDataValues()
             })
         
+        output$userFeedback <- renderText({
+            input$checkMe
+            isolate({
+                if ((input$alpha > confInterval[1,1]) & 
+                    (input$alpha < confInterval[1,2]) & 
+                    (input$beta > confInterval[2,1]) & 
+                    (input$beta < confInterval[2,2])) {
+                    sprintf("Nice! The red line is within the %d%% confidence interval (grey area).", 
+                            conflvl*100)
+                }
+                else {
+                    sprintf("Hmmm, The red line should be within the %d%% confidence interval (grey area).", 
+                            conflvl*100)
+                }
+            })
+        })
     }
 )
