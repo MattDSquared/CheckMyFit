@@ -1,7 +1,7 @@
 ---
-title       : 
-subtitle    : 
-author      : 
+title       : Check My Fit
+subtitle    : Learning how linear fitting works
+author      : MattDSquared
 job         : 
 framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
 highlighter : highlight.js  # {highlight.js, prettify, highlight}
