@@ -1,26 +1,109 @@
 ---
 title       : Check My Fit
-subtitle    : Learning how linear fitting works
+subtitle    : Simple app to play around with linear fitting
 author      : MattDSquared
 job         : 
 framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
 highlighter : highlight.js  # {highlight.js, prettify, highlight}
 hitheme     : tomorrow      # 
-widgets     : []            # {mathjax, quiz, bootstrap}
+widgets     : [mathjax]     # {mathjax, quiz, bootstrap}
 mode        : selfcontained # {standalone, draft}
 knit        : slidify::knit2slides
----
 
-## Read-And-Delete
+--- &twocol
 
-1. Edit YAML front matter
-2. Write using R Markdown
-3. Use an empty line followed by three dashes to separate slides!
+```{r setup, echo=FALSE, results='hide', message=FALSE}
+library(ggplot2)
+library(datasets); data(mtcars)
+library(xtable)
 
---- .class #id 
+conflvl <- .9
 
-## Slide 2
+getConfInterval <- function(fit, xi, level) {
+    sumCoef <- summary(fit)$coefficients
+    sumCoef[xi,"Estimate"] + 
+        c(-1,1) * qt(.5+level/2, df = fit$df) * sumCoef[xi,"Std. Error"]
+}
 
+myfit <- lm(mpg ~ wt, data=mtcars)
 
+confInterval <- rbind(getConfInterval(myfit, 1, conflvl), 
+                       getConfInterval(myfit, 2, conflvl))
+```
 
+## Why should I Check My Fit?
 
+*** =left
+
+* Ever wonder what it means to fit a line through some data?
+
+* This app helps you learn it how it works!
+
+*** =right
+
+```{r slide1.plot, echo=FALSE, fig.height=6, fig.width=6}
+gg <- ggplot(mtcars, aes(x=wt, y=mpg))
+gg <- gg + geom_point(colour="steelblue", size=3) +
+    labs(x="Weight [1000 lb]") +
+    labs(y="Miles Per Gallon") + 
+    labs(title=paste0("Find the slope and intercept for a best linear fit ", 
+                      "through the data."))
+alpha <- 37
+beta <- -5.5
+gg <- gg + geom_abline(intercept = alpha, slope = beta, 
+                       colour = "red", size = 1.5)
+
+gg <- gg + geom_smooth(method="lm", level=conflvl)
+
+print(gg)
+```
+
+--- &twocol .class #id 
+
+## Extra features - User feedback
+
+*** =left
+
+* Better understand what that grey region is on ggplot2 smooth plots.
+
+* Here's an example for a line with the form $y = A + B x$:
+
+```{r example.line, echo=FALSE, results='asis'}
+params.example <- data.frame(Fit = factor(c("Good","Bad")), 
+                             A = c(38, 30), 
+                             B = c(-5.7, -4))
+
+tab.out <- xtable(params.example)
+
+print(tab.out, type="html", include.rownames = FALSE)
+```
+
+*** =right
+
+```{r slide2.plot, echo=FALSE, fig.height=6, fig.width=6}
+gg <- ggplot(mtcars, aes(x=wt, y=mpg))
+
+gg <- gg + geom_point(colour="steelblue", size=3) +
+    labs(x="Weight [1000 lb]") +
+    labs(y="Miles Per Gallon") + 
+    labs(title=sprintf(paste0("Tells user if line is inside a %d%% ",
+                              "confidence bound."), 100*conflvl))
+
+gg <- gg + 
+    geom_abline(aes(colour="Good"), 
+                       intercept=params.example[1,"A"], 
+                       slope=params.example[1,"B"], 
+                       data=, size = 1) +
+    geom_abline(aes(colour="Bad"), 
+                       intercept=params.example[2,"A"], 
+                       slope=params.example[2,"B"], 
+                       data=, size = 1) +
+    scale_colour_discrete("")
+
+gg <- gg + geom_smooth(aes(colour="BestFit"), method="lm", size = 1,
+                       level=conflvl)
+
+gg <- gg + theme(legend.position="right")
+
+print(gg)
+```
