@@ -13,9 +13,9 @@ shinyServer(
         
         # plot showing fit curves and data
         output$myScatter <- renderPlot({
-            gg <- ggplot(mtcars, aes(x=am, y=mpg))
-            gg <- gg + geom_point(colour="steelblue") +
-                labs(x="Transmission type") +
+            gg <- ggplot(mtcars, aes(x=wt, y=mpg))
+            gg <- gg + geom_point(colour="steelblue", size=3) +
+                labs(x="Weight [1000 lb]") +
                 labs(y="Miles Per Gallon") + 
                 labs(title="Find the slope and intercept for a best linear fit through the data.")
             alpha <- input$alpha
@@ -36,7 +36,7 @@ shinyServer(
         # user operation. 
         calcFitCurve <- reactive({
             if (input$checkMe > 0) {
-                myfit <<- lm(mpg ~ am, data=mtcars)
+                myfit <<- lm(mpg ~ wt, data=mtcars)
                 confInterval <<- rbind(getConfInterval(myfit, 1, conflvl), 
                                        getConfInterval(myfit, 2, conflvl))
             }
@@ -45,7 +45,7 @@ shinyServer(
         # reactive function for building the table
         fitDataValues <- reactive({
             
-            estimate.rmse <- sqrt(mean((mtcars$mpg - (input$alpha + input$beta*mtcars$am))^2))
+            estimate.rmse <- sqrt(mean((mtcars$mpg - (input$alpha + input$beta*mtcars$wt))^2))
             
             lineStats <- data.frame(
                 Value = c("Intercept", 
@@ -59,7 +59,7 @@ shinyServer(
             # Conditional graph display on button press. 
             if (input$checkMe > 0) {
                 lineStats$BestFit <- as.character(round(c(myfit$coefficients["(Intercept)"], 
-                                                          myfit$coefficients["am"],
+                                                          myfit$coefficients["wt"],
                                                           sqrt(mean(myfit$residuals^2))),
                                                         3))
                 lineStats$BestFit_Lower <- as.character(round(c(confInterval[,1],NA),3))
