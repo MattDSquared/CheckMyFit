@@ -60,7 +60,7 @@ print(gg)
 
 --- &twocol .class #id 
 
-## Extra features - User feedback
+## Interactive User feedback
 
 *** =left
 
@@ -77,6 +77,8 @@ tab.out <- xtable(params.example)
 
 print(tab.out, type="html", include.rownames = FALSE)
 ```
+
+* The app will let you know if you were close to the actual fit line by comparing the intercept (A) and slope (B) to the `r 100*conflvl`% confidence interval of these parameters.  
 
 *** =right
 
@@ -107,3 +109,23 @@ gg <- gg + theme(legend.position="right")
 
 print(gg)
 ```
+
+--- .class #id 
+
+## How to use it
+
+<img class=center src=assets/img/AppScreenshot.png height=450>
+
+Simply start by guessing the intercept and slope in the input boxes, trying to minimize the means squared error (MSE) of the line. Then once you think you have it, click 'Check it', and the app will let you know how you did. 
+
+--- .class #id 
+
+## Where to go get it
+
+* The app is hosted by shinyapps.io on my account:  
+https://mattdsquared.shinyapps.io/CheckMyFit
+
+* The source code can be found on my github account:  
+https://github.com/MattDSquared/CheckMyFit
+
+* The data used for this app is the classical mtcars data set built into R. 
